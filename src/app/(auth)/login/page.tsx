@@ -4,12 +4,37 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleClearSession = async () => {
+    toast.loading("Clearing session...");
+
+    try {
+      await supabase.auth.signOut();
+
+      // Clear all cookies
+      document.cookie.split(";").forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+
+      // Clear localStorage
+      localStorage.clear();
+
+      toast.success("Session cleared! You can now login.");
+      setError("");
+    } catch (err) {
+      console.error("Clear session error:", err);
+      toast.error("Failed to clear session");
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +139,21 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Login"}
           </Button>
         </form>
+
+        <div className="border-t border-border pt-4 mt-4">
+          <p className="text-xs text-muted-foreground text-center mb-2">
+            Having trouble logging in?
+          </p>
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs"
+            onClick={handleClearSession}
+            disabled={loading}
+          >
+            Clear Session & Cookies
+          </Button>
+        </div>
       </div>
     </div>
   );
