@@ -17,10 +17,15 @@ export async function middleware(req: NextRequest) {
           return req.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
+          // Set as session cookie by removing maxAge and expires
+          const sessionOptions = { ...options };
+          delete sessionOptions.maxAge;
+          delete sessionOptions.expires;
+
           req.cookies.set({
             name,
             value,
-            ...options,
+            ...sessionOptions,
           });
           response = NextResponse.next({
             request: {
@@ -30,7 +35,7 @@ export async function middleware(req: NextRequest) {
           response.cookies.set({
             name,
             value,
-            ...options,
+            ...sessionOptions,
           });
         },
         remove(name: string, options: CookieOptions) {
